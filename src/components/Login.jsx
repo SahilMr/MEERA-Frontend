@@ -24,23 +24,23 @@ export default function Login({ onLogin }) {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#fafaf9] px-6">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-brand-50 px-6">
       <div className="w-full max-w-md">
         <div className="mb-10 text-center">
-          <h1 className="text-3xl font-light tracking-tight text-[#1a1a1a]">
-            RTI Compliance
+          <h1 className="text-4xl font-semibold tracking-tight text-slate-900">
+            MEERA
           </h1>
-          <p className="mt-2 text-sm text-[#6b6b6b]">
-            Right to Information management portal
+          <p className="mt-2 text-sm text-slate-500">
+            Query management portal
           </p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-lg border border-neutral-200 bg-white p-8 shadow-sm"
+          className="rounded-xl border border-slate-200/80 bg-white p-8 shadow-lg shadow-slate-200/50"
         >
           <div className="mb-5">
-            <label htmlFor="username" className="mb-1.5 block text-sm font-medium text-[#1a1a1a]">
+            <label htmlFor="username" className="mb-1.5 block text-sm font-medium text-slate-700">
               Username
             </label>
             <input
@@ -51,13 +51,13 @@ export default function Login({ onLogin }) {
                 setUsername(e.target.value);
                 setShowError(false);
               }}
-              className="w-full rounded-md border border-neutral-200 px-3 py-2.5 text-sm outline-none transition focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 transition placeholder:text-slate-400"
               placeholder="Enter username"
             />
           </div>
 
           <div className="mb-6">
-            <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-[#1a1a1a]">
+            <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-slate-700">
               Password
             </label>
             <input
@@ -68,23 +68,23 @@ export default function Login({ onLogin }) {
                 setPassword(e.target.value);
                 setShowError(false);
               }}
-              className="w-full rounded-md border border-neutral-200 px-3 py-2.5 text-sm outline-none transition focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 transition placeholder:text-slate-400"
               placeholder="Enter password"
             />
           </div>
 
           <div className="mb-6">
-            <span className="mb-2 block text-sm font-medium text-[#1a1a1a]">Role</span>
+            <span className="mb-2 block text-sm font-medium text-slate-700">Role</span>
             <div className="flex gap-2">
               {ROLES.map((r) => (
                 <button
                   key={r.value}
                   type="button"
                   onClick={() => setRole(r.value)}
-                  className={`flex-1 rounded-md border px-3 py-2 text-xs font-medium transition ${
+                  className={`flex-1 rounded-lg border px-3 py-2 text-xs font-medium transition ${
                     role === r.value
-                      ? 'border-[#1a1a1a] bg-[#1a1a1a] text-white'
-                      : 'border-neutral-200 bg-white text-[#6b6b6b] hover:border-neutral-300'
+                      ? 'border-brand-600 bg-brand-600 text-white shadow-sm'
+                      : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50'
                   }`}
                 >
                   {r.label}
@@ -102,7 +102,7 @@ export default function Login({ onLogin }) {
           <button
             type="submit"
             disabled={!isValid}
-            className="w-full rounded-md bg-[#1a1a1a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
+            className="w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Login
           </button>
