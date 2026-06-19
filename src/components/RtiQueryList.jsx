@@ -35,20 +35,20 @@ export default function RtiQueryList() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-light tracking-tight text-[#1a1a1a]">RTI Queries</h1>
-        <p className="mt-1 text-sm text-[#6b6b6b]">
-          Review and respond to incoming RTI requests
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Queries</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Review and respond to incoming requests
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-neutral-200 bg-neutral-50">
+            <tr className="border-b border-slate-200 bg-slate-50">
               {rtiColumnConfig.map((col) => (
                 <th
                   key={col.key}
-                  className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-[#6b6b6b]"
+                  className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500"
                 >
                   {col.label}
                 </th>
@@ -60,14 +60,14 @@ export default function RtiQueryList() {
               <tr
                 key={row.id}
                 onClick={() => handleRowClick(row)}
-                className={`border-b border-neutral-100 transition last:border-0 ${
+                className={`border-b border-slate-100 transition last:border-0 ${
                   row.status === 'Pending'
-                    ? 'cursor-pointer hover:bg-neutral-50'
+                    ? 'cursor-pointer hover:bg-brand-50/50'
                     : 'cursor-default'
                 }`}
               >
                 {rtiColumnConfig.map((col) => (
-                  <td key={col.key} className="px-5 py-4 text-[#1a1a1a]">
+                  <td key={col.key} className="px-5 py-4 text-slate-800">
                     {col.key === 'status' ? (
                       <StatusBadge status={row.status} />
                     ) : (
@@ -90,7 +90,7 @@ export default function RtiQueryList() {
       )}
 
       {toast && (
-        <div className="fixed bottom-6 right-6 z-[60] rounded-lg bg-[#1a1a1a] px-5 py-3 text-sm text-white shadow-lg">
+        <div className="fixed bottom-6 right-6 z-[60] rounded-lg bg-slate-800 px-5 py-3 text-sm text-white shadow-lg">
           {toast}
         </div>
       )}

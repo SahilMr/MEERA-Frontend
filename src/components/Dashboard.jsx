@@ -46,10 +46,10 @@ export default function Dashboard({ currentRole }) {
         {cards.map((label) => (
           <div
             key={label}
-            className="rounded-lg border border-neutral-200 bg-white p-6"
+            className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
           >
-            <p className="text-sm text-[#6b6b6b]">{label}</p>
-            <p className="mt-2 text-3xl font-light text-[#1a1a1a]">
+            <p className="text-sm font-medium text-slate-500">{label}</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-900">
               {values[label] ?? '—'}
             </p>
           </div>
@@ -60,9 +60,9 @@ export default function Dashboard({ currentRole }) {
         <div className="mt-10">
           <Link
             to="/rti-queries"
-            className="inline-flex items-center rounded-md border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-[#1a1a1a] transition hover:border-neutral-300 hover:bg-neutral-50"
+            className="inline-flex items-center rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-brand-700"
           >
-            View RTI Queries →
+            View Queries →
           </Link>
         </div>
       )}

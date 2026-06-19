@@ -26,8 +26,8 @@ export default function AppLayout({ currentRole, onLogout, children }) {
           : [];
 
   return (
-    <div className="min-h-screen bg-[#fafaf9]">
-      <header className="border-b border-neutral-200 bg-white">
+    <div className="min-h-screen bg-slate-100">
+      <header className="border-b border-slate-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-8 py-4">
           <div className="flex items-center gap-8">
             <Link to={homeRoute} className="text-lg font-light tracking-tight text-[#1a1a1a]">
@@ -39,10 +39,10 @@ export default function AppLayout({ currentRole, onLogout, children }) {
                   <Link
                     key={item.to}
                     to={item.to}
-                    className={`rounded-md px-3 py-1.5 text-sm transition ${
+                    className={`rounded-lg px-3 py-1.5 text-sm transition ${
                       location.pathname === item.to
-                        ? 'bg-neutral-100 font-medium text-[#1a1a1a]'
-                        : 'text-[#6b6b6b] hover:text-[#1a1a1a]'
+                        ? 'bg-brand-50 font-medium text-brand-700'
+                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
                     {item.label}
@@ -54,7 +54,7 @@ export default function AppLayout({ currentRole, onLogout, children }) {
           <button
             type="button"
             onClick={onLogout}
-            className="text-sm text-[#6b6b6b] transition hover:text-[#1a1a1a]"
+            className="rounded-lg px-3 py-1.5 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-900"
           >
             Logout
           </button>

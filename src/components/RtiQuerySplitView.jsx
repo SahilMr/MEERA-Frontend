@@ -4,8 +4,8 @@ import AssistantPanel from './AssistantPanel';
 function ReadOnlyField({ label, value }) {
   return (
     <div className="mb-4">
-      <p className="mb-1 text-xs font-medium text-[#6b6b6b]">{label}</p>
-      <p className="text-sm text-[#1a1a1a]">{value}</p>
+      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="text-sm text-slate-800">{value}</p>
     </div>
   );
 }
@@ -27,31 +27,31 @@ export default function RtiQuerySplitView({ query, onClose, onSubmit }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex bg-[#fafaf9]">
-      <div className="flex w-3/4 flex-col overflow-y-auto border-r border-neutral-200 p-8">
+    <div className="fixed inset-0 z-50 flex bg-slate-100">
+      <div className="flex w-3/4 flex-col overflow-y-auto border-r border-slate-200 bg-white p-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-light text-[#1a1a1a]">{query.id}</h2>
-            <p className="mt-1 text-sm text-[#6b6b6b]">{query.sarthiInward}</p>
+            <h2 className="text-xl font-semibold text-slate-900">{query.id}</h2>
+            <p className="mt-1 text-sm text-slate-500">{query.sarthiInward}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-neutral-200 px-3 py-1.5 text-sm text-[#6b6b6b] transition hover:bg-neutral-50"
+            className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 transition hover:bg-slate-50"
           >
             Close
           </button>
         </div>
 
-        <div className="mb-8 rounded-lg border border-neutral-200 bg-white p-6">
+        <div className="mb-8 rounded-xl border border-slate-200 bg-slate-50 p-6">
           <ReadOnlyField label="Query Raised By" value={query.raisedBy} />
-          <ReadOnlyField label="RTI Query" value={query.query} />
+          <ReadOnlyField label="Query" value={query.query} />
           <ReadOnlyField label="Enclosures" value={query.enclosures} />
           <ReadOnlyField label="Date" value={query.date} />
         </div>
 
         <div className="mb-4">
-          <label htmlFor="office-note" className="mb-1.5 block text-sm font-medium text-[#1a1a1a]">
+          <label htmlFor="office-note" className="mb-1.5 block text-sm font-medium text-slate-700">
             Office Note
           </label>
           <textarea
@@ -59,7 +59,7 @@ export default function RtiQuerySplitView({ query, onClose, onSubmit }) {
             value={officeNote}
             onChange={(e) => setOfficeNote(e.target.value)}
             rows={8}
-            className="w-full rounded-md border border-neutral-200 px-3 py-2.5 text-sm outline-none transition focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400"
+            className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 transition placeholder:text-slate-400"
             placeholder="Draft your office note here..."
           />
         </div>
@@ -75,12 +75,12 @@ export default function RtiQuerySplitView({ query, onClose, onSubmit }) {
             <button
               type="button"
               onClick={() => officeNoteInputRef.current?.click()}
-              className="rounded-md border border-neutral-200 px-4 py-2 text-sm font-medium text-[#1a1a1a] transition hover:bg-neutral-50"
+              className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
               Upload Office Note
             </button>
             {officeNoteFile && (
-              <p className="mt-1 text-xs text-[#6b6b6b]">{officeNoteFile}</p>
+              <p className="mt-1 text-xs text-slate-500">{officeNoteFile}</p>
             )}
           </div>
 
@@ -94,12 +94,12 @@ export default function RtiQuerySplitView({ query, onClose, onSubmit }) {
             <button
               type="button"
               onClick={() => attachDocsInputRef.current?.click()}
-              className="rounded-md border border-neutral-200 px-4 py-2 text-sm font-medium text-[#1a1a1a] transition hover:bg-neutral-50"
+              className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
               Attach Documents
             </button>
             {attachedDocs && (
-              <p className="mt-1 text-xs text-[#6b6b6b]">{attachedDocs}</p>
+              <p className="mt-1 text-xs text-slate-500">{attachedDocs}</p>
             )}
           </div>
         </div>
@@ -107,13 +107,13 @@ export default function RtiQuerySplitView({ query, onClose, onSubmit }) {
         <button
           type="button"
           onClick={handleSubmit}
-          className="w-fit rounded-md bg-[#1a1a1a] px-6 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800"
+          className="w-fit rounded-lg bg-brand-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-brand-700"
         >
           Submit
         </button>
       </div>
 
-      <div className="w-1/4 overflow-y-auto p-6">
+      <div className="w-1/4 overflow-y-auto bg-slate-50 p-6">
         <AssistantPanel onCopySuggestion={handleCopySuggestion} />
       </div>
     </div>

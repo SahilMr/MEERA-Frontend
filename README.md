@@ -1,6 +1,6 @@
-# RTI Compliance App
+# MEERA Frontend
 
-Frontend v1 for the RTI Compliance portal — Department User experience with mock data.
+Frontend v1 for MEERA — Department User experience with mock data.
 
 ## Stack
 
@@ -11,7 +11,7 @@ Frontend v1 for the RTI Compliance portal — Department User experience with mo
 ## Getting started
 
 ```bash
-cd rti-compliance-app
+cd ~/codingwoding/projects/MEERA-Frontend
 npm install
 npm run dev
 ```
@@ -24,7 +24,7 @@ Use any username and password. Select a role before clicking Login:
 
 | Role | Route |
 |------|-------|
-| Department User | Full dashboard + RTI query flow |
+| Department User | Full dashboard + query flow |
 | Admin | Placeholder page |
 | Department Admin | Placeholder page |
 
