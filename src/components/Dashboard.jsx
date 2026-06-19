@@ -10,20 +10,39 @@
 // 9. Department onboarding/mapping screen — who manages it (Admin vs Dept Admin), and what gets mapped (users, RTI categories, both)?
 
 import { Link } from 'react-router-dom';
+import { deptAdminContext } from '../mock/departmentMaster';
 import { kpiConfig, kpiMockValues } from '../mock/kpiConfig';
 
 export default function Dashboard({ currentRole }) {
   const cards = kpiConfig[currentRole] || kpiConfig.user;
   const values = kpiMockValues[currentRole] || kpiMockValues.user;
+  const isAdmin = currentRole === 'admin';
+  const isDeptAdmin = currentRole === 'deptAdmin';
+  const gridClass =
+    cards.length > 3
+      ? 'grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
+      : 'grid grid-cols-1 gap-6 sm:grid-cols-3';
 
   return (
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-light tracking-tight text-[#1a1a1a]">Dashboard</h1>
-        <p className="mt-1 text-sm text-[#6b6b6b]">Overview of RTI query activity</p>
+        <p className="mt-1 text-sm text-[#6b6b6b]">
+          {isAdmin
+            ? 'Organization-wide overview of RTI query activity'
+            : isDeptAdmin
+              ? `Overview of RTI query activity for ${deptAdminContext.department}`
+              : 'Overview of RTI query activity'}
+        </p>
+        {isDeptAdmin && (
+          <div className="mt-4 inline-flex items-center rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-sm text-[#1a1a1a]">
+            <span className="text-[#6b6b6b]">Department:</span>
+            <span className="ml-2 font-medium">{deptAdminContext.department}</span>
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className={gridClass}>
         {cards.map((label) => (
           <div
             key={label}

@@ -17,15 +17,15 @@ export const kpiMockValues = {
     'Total Pending': 31,
   },
   deptAdmin: {
-    'Total RTI Queries': 0,
-    'Total Resolved': 0,
-    'Total Pending': 0,
+    'Total RTI Queries': 156,
+    'Total Resolved': 108,
+    'Total Pending': 34,
   },
   admin: {
-    'Total RTI Queries': 0,
-    'Total Resolved': 0,
-    'Total Pending': 0,
-    'Total RTI Not In Scope': 0,
-    'Total Active Sessions': 0,
+    'Total RTI Queries': 486,
+    'Total Resolved': 312,
+    'Total Pending': 89,
+    'Total RTI Not In Scope': 42,
+    'Total Active Sessions': 17,
   },
 };

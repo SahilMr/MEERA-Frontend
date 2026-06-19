@@ -1,22 +1,36 @@
 import { Link, useLocation } from 'react-router-dom';
 
+const HOME_ROUTES = {
+  admin: '/admin',
+  deptAdmin: '/dept-admin',
+  user: '/dashboard',
+};
+
 export default function AppLayout({ currentRole, onLogout, children }) {
   const location = useLocation();
+  const homeRoute = HOME_ROUTES[currentRole] || '/dashboard';
 
   const navItems =
-    currentRole === 'user'
-      ? [
-          { to: '/dashboard', label: 'Dashboard' },
-          { to: '/rti-queries', label: 'RTI Queries' },
-        ]
-      : [];
+    currentRole === 'admin'
+      ? [{ to: '/admin', label: 'Dashboard' }]
+      : currentRole === 'deptAdmin'
+        ? [
+            { to: '/dept-admin', label: 'Dashboard' },
+            { to: '/dept-admin/masters', label: 'Masters' },
+          ]
+        : currentRole === 'user'
+          ? [
+              { to: '/dashboard', label: 'Dashboard' },
+              { to: '/rti-queries', label: 'RTI Queries' },
+            ]
+          : [];
 
   return (
     <div className="min-h-screen bg-[#fafaf9]">
       <header className="border-b border-neutral-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-8 py-4">
           <div className="flex items-center gap-8">
-            <Link to="/dashboard" className="text-lg font-light tracking-tight text-[#1a1a1a]">
+            <Link to={homeRoute} className="text-lg font-light tracking-tight text-[#1a1a1a]">
               RTI Compliance
             </Link>
             {navItems.length > 0 && (

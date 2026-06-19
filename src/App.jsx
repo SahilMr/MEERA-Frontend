@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import Dashboard from './components/Dashboard';
+import DepartmentUserMapping from './components/DepartmentUserMapping';
 import Login from './components/Login';
-import PlaceholderPage from './components/PlaceholderPage';
 import RtiQueryList from './components/RtiQueryList';
 
 const ROLE_ROUTES = {
@@ -52,7 +52,7 @@ export default function App() {
         element={
           <ProtectedRoute currentRole={currentRole} allowedRole="admin">
             <AppLayout currentRole={currentRole} onLogout={handleLogout}>
-              <PlaceholderPage title="Admin dashboard — coming in v2" />
+              <Dashboard currentRole={currentRole} />
             </AppLayout>
           </ProtectedRoute>
         }
@@ -63,7 +63,18 @@ export default function App() {
         element={
           <ProtectedRoute currentRole={currentRole} allowedRole="deptAdmin">
             <AppLayout currentRole={currentRole} onLogout={handleLogout}>
-              <PlaceholderPage title="Department admin dashboard — coming in v2" />
+              <Dashboard currentRole={currentRole} />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dept-admin/masters"
+        element={
+          <ProtectedRoute currentRole={currentRole} allowedRole="deptAdmin">
+            <AppLayout currentRole={currentRole} onLogout={handleLogout}>
+              <DepartmentUserMapping />
             </AppLayout>
           </ProtectedRoute>
         }
