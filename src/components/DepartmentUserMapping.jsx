@@ -1,25 +1,26 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   bulkUploadTemplateExample,
   bulkUploadTemplateHeaders,
-  departmentUsers,
   departmentsByOffice,
   divisionsByDepartment,
-  initialUserMappings,
+  deptAdminContext,
   offices,
   subSectionsByDivision,
 } from '../mock/departmentMaster';
+import { fetchDepartmentMaster, uploadDepartmentMaster } from '../services/departmentMasterApi';
+import usersConfig from '../config/usersConfig.json';
 
 const selectClassName =
   'w-full rounded-md border border-neutral-200 px-3 py-2.5 text-sm outline-none transition focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400';
 
-const EMPTY_FORM = {
-  office: '',
-  department: '',
+const getInitialForm = () => ({
+  office: deptAdminContext.office || 'Central Office',
+  department: deptAdminContext.department || 'Department Of Supervision',
   division: '',
   subSection: '',
   departmentUser: '',
-};
+});
 
 function FormSelect({ id, label, value, onChange, options, placeholder, disabled }) {
   return (
@@ -79,13 +80,13 @@ function parseBulkUploadCsv(text) {
   }
 
   const rows = lines.slice(1).map((line, index) => {
-    const [office, department, division, subSection, departmentUser] = parseCsvLine(line);
+    const [office, division, subSection, departmentUser] = parseCsvLine(line);
 
-    if (!office || !department || !division || !subSection || !departmentUser) {
+    if (!office || !division || !subSection || !departmentUser) {
       throw new Error(`Row ${index + 2} is incomplete. All columns are required.`);
     }
 
-    return { office, department, division, subSection, departmentUser };
+    return { office, division, subSection, departmentUser };
   });
 
   return rows;
@@ -108,12 +109,15 @@ function downloadBulkTemplate() {
 
 export default function DepartmentUserMapping() {
   const fileInputRef = useRef(null);
-  const [mappings, setMappings] = useState(initialUserMappings);
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [mappings, setMappings] = useState([]);
+  const [form, setForm] = useState(getInitialForm);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [uploadFile, setUploadFile] = useState(null);
   const [formError, setFormError] = useState('');
   const [bulkError, setBulkError] = useState('');
+  const [apiError, setApiError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
 
   const departmentOptions = useMemo(
@@ -131,12 +135,80 @@ export default function DepartmentUserMapping() {
     [form.division],
   );
 
+  const departmentUsersOptions = useMemo(() => {
+    return usersConfig.users
+      .filter((u) => u.role === 'user' && u.department === deptAdminContext.department)
+      .map((u) => u.email);
+  }, [deptAdminContext.department]);
+
   const isFormValid =
     form.office &&
     form.department &&
     form.division &&
     form.subSection &&
     form.departmentUser;
+
+  async function reloadMappings() {
+    setApiError('');
+    try {
+      const response = await fetchDepartmentMaster(deptAdminContext.department);
+      if (response.error) {
+        setApiError(response.message || 'Failed to reload existing mappings.');
+      } else {
+        const records = response.data?.records || [];
+        const mapped = records.map((rec, idx) => ({
+          id: rec.id || `MAP-${String(idx + 1).padStart(3, '0')}`,
+          office: rec.office,
+          department: rec.department,
+          division: rec.division_section,
+          subSection: rec.sub_section,
+          departmentUser: rec.user,
+        }));
+        setMappings(mapped);
+      }
+    } catch (err) {
+      setApiError(err.message || 'Failed to reload existing mappings.');
+    }
+  }
+
+  useEffect(() => {
+    let active = true;
+    async function loadMappings() {
+      setIsLoading(true);
+      setApiError('');
+      try {
+        const response = await fetchDepartmentMaster(deptAdminContext.department);
+        if (active) {
+          if (response.error) {
+            setApiError(response.message || 'Failed to load existing mappings.');
+          } else {
+            const records = response.data?.records || [];
+            const mapped = records.map((rec, idx) => ({
+              id: rec.id || `MAP-${String(idx + 1).padStart(3, '0')}`,
+              office: rec.office,
+              department: rec.department,
+              division: rec.division_section,
+              subSection: rec.sub_section,
+              departmentUser: rec.user,
+            }));
+            setMappings(mapped);
+          }
+        }
+      } catch (err) {
+        if (active) {
+          setApiError(err.message || 'Failed to load existing mappings.');
+        }
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    }
+    loadMappings();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function showToast(message) {
     setToast(message);
@@ -148,7 +220,6 @@ export default function DepartmentUserMapping() {
       const next = { ...prev, [field]: value };
 
       if (field === 'office') {
-        next.department = '';
         next.division = '';
         next.subSection = '';
       } else if (field === 'department') {
@@ -163,7 +234,7 @@ export default function DepartmentUserMapping() {
     setFormError('');
   }
 
-  function handleCreateMapping(e) {
+  async function handleCreateMapping(e) {
     e.preventDefault();
 
     if (!isFormValid) {
@@ -171,15 +242,33 @@ export default function DepartmentUserMapping() {
       return;
     }
 
-    setMappings((prev) => [
-      ...prev,
-      {
-        id: `MAP-${String(prev.length + 1).padStart(3, '0')}`,
-        ...form,
-      },
-    ]);
-    setForm(EMPTY_FORM);
-    showToast('Department user mapping created successfully.');
+    setIsSubmitting(true);
+    setFormError('');
+    try {
+      const payload = {
+        records: [
+          {
+            office: form.office,
+            division_section: form.division,
+            sub_section: form.subSection,
+            user: form.departmentUser,
+          },
+        ],
+        department: deptAdminContext.department,
+      };
+      const response = await uploadDepartmentMaster(payload);
+      if (response.error) {
+        setFormError(response.message || 'Failed to create mapping.');
+      } else {
+        setForm(getInitialForm());
+        showToast('Department user mapping created successfully.');
+        await reloadMappings();
+      }
+    } catch (err) {
+      setFormError(err.message || 'Failed to create mapping.');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function handleBulkSubmit(e) {
@@ -191,26 +280,42 @@ export default function DepartmentUserMapping() {
       return;
     }
 
+    setIsSubmitting(true);
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       try {
         const rows = parseBulkUploadCsv(String(reader.result));
-        setMappings((prev) => [
-          ...prev,
-          ...rows.map((row, index) => ({
-            id: `MAP-${String(prev.length + index + 1).padStart(3, '0')}`,
-            ...row,
-          })),
-        ]);
-        setUploadFile(null);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
+        const records = rows.map((row) => ({
+          office: row.office,
+          division_section: row.division,
+          sub_section: row.subSection,
+          user: row.departmentUser,
+        }));
+        const payload = {
+          records,
+          department: deptAdminContext.department,
+        };
+        const response = await uploadDepartmentMaster(payload);
+        if (response.error) {
+          setBulkError(response.message || 'Failed to upload department master.');
+        } else {
+          setUploadFile(null);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+          setShowBulkUpload(false);
+          showToast(`${rows.length} mapping${rows.length === 1 ? '' : 's'} uploaded successfully.`);
+          await reloadMappings();
         }
-        setShowBulkUpload(false);
-        showToast(`${rows.length} mapping${rows.length === 1 ? '' : 's'} created from bulk upload.`);
       } catch (error) {
         setBulkError(error.message);
+      } finally {
+        setIsSubmitting(false);
       }
+    };
+    reader.onerror = () => {
+      setBulkError('Failed to read the file.');
+      setIsSubmitting(false);
     };
     reader.readAsText(uploadFile);
   }
@@ -274,14 +379,19 @@ export default function DepartmentUserMapping() {
               </p>
             </div>
 
-            {bulkError && <p className="mt-4 text-sm text-red-600">{bulkError}</p>}
+            {bulkError && (
+              <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {bulkError}
+              </div>
+            )}
 
             <div className="mt-5 flex gap-3">
               <button
                 type="submit"
-                className="rounded-md bg-[#1a1a1a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800"
+                disabled={isSubmitting}
+                className="rounded-md bg-[#1a1a1a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Submit Upload
+                {isSubmitting ? 'Uploading...' : 'Submit Upload'}
               </button>
               <button
                 type="button"
@@ -325,9 +435,9 @@ export default function DepartmentUserMapping() {
             label="Department"
             value={form.department}
             onChange={(e) => updateForm('department', e.target.value)}
-            options={departmentOptions}
+            options={[deptAdminContext.department]}
             placeholder="Select department"
-            disabled={!form.office}
+            disabled={true}
           />
           <FormSelect
             id="division"
@@ -352,23 +462,33 @@ export default function DepartmentUserMapping() {
             label="Department User"
             value={form.departmentUser}
             onChange={(e) => updateForm('departmentUser', e.target.value)}
-            options={departmentUsers}
+            options={departmentUsersOptions}
             placeholder="Select department user"
           />
         </div>
 
-        {formError && <p className="mt-4 text-sm text-red-600">{formError}</p>}
+        {formError && (
+          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {formError}
+          </div>
+        )}
 
         <div className="mt-6">
           <button
             type="submit"
-            disabled={!isFormValid}
+            disabled={!isFormValid || isSubmitting}
             className="rounded-md bg-[#1a1a1a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Create Mapping
+            {isSubmitting ? 'Saving...' : 'Create Mapping'}
           </button>
         </div>
       </form>
+
+      {apiError && (
+        <div className="mt-8 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {apiError}
+        </div>
+      )}
 
       <div className="mt-8 overflow-hidden rounded-lg border border-neutral-200 bg-white">
         <div className="border-b border-neutral-200 px-5 py-4">
@@ -390,15 +510,29 @@ export default function DepartmentUserMapping() {
             </tr>
           </thead>
           <tbody>
-            {mappings.map((mapping) => (
-              <tr key={mapping.id} className="border-b border-neutral-100 last:border-0">
-                <td className="px-5 py-4 text-[#1a1a1a]">{mapping.office}</td>
-                <td className="px-5 py-4 text-[#1a1a1a]">{mapping.department}</td>
-                <td className="px-5 py-4 text-[#1a1a1a]">{mapping.division}</td>
-                <td className="px-5 py-4 text-[#1a1a1a]">{mapping.subSection}</td>
-                <td className="px-5 py-4 text-[#1a1a1a]">{mapping.departmentUser}</td>
+            {isLoading ? (
+              <tr>
+                <td colSpan={5} className="px-5 py-8 text-center text-sm text-[#6b6b6b]">
+                  Loading mappings...
+                </td>
               </tr>
-            ))}
+            ) : mappings.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-5 py-8 text-center text-sm text-[#6b6b6b]">
+                  No mappings found.
+                </td>
+              </tr>
+            ) : (
+              mappings.map((mapping) => (
+                <tr key={mapping.id} className="border-b border-neutral-100 last:border-0">
+                  <td className="px-5 py-4 text-[#1a1a1a]">{mapping.office}</td>
+                  <td className="px-5 py-4 text-[#1a1a1a]">{mapping.department}</td>
+                  <td className="px-5 py-4 text-[#1a1a1a]">{mapping.division}</td>
+                  <td className="px-5 py-4 text-[#1a1a1a]">{mapping.subSection}</td>
+                  <td className="px-5 py-4 text-[#1a1a1a]">{mapping.departmentUser}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

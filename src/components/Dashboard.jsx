@@ -9,19 +9,61 @@
 // 8. Is the assistant panel interactive chat, or passive auto-suggestions only?
 // 9. Department onboarding/mapping screen — who manages it (Admin vs Dept Admin), and what gets mapped (users, RTI categories, both)?
 
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { deptAdminContext } from '../mock/departmentMaster';
-import { kpiConfig, kpiMockValues } from '../mock/kpiConfig';
+import { kpiConfig } from '../mock/kpiConfig';
+import { fetchRtiQueryCount } from '../services/rtiQueryApi';
+
+const COUNT_API_LABELS = {
+  'Total RTI Queries': 'total_count',
+  'Total Resolved': 'resolved_count',
+  'Total Pending': 'pending_count',
+  'Total RTI Not In Scope': 'not_in_scope_count',
+  'Total Active Sessions': 'active_sessions_count',
+};
 
 export default function Dashboard({ currentRole }) {
   const cards = kpiConfig[currentRole] || kpiConfig.user;
-  const values = kpiMockValues[currentRole] || kpiMockValues.user;
+  const [countData, setCountData] = useState(null);
+  const [loadError, setLoadError] = useState(null);
   const isAdmin = currentRole === 'admin';
   const isDeptAdmin = currentRole === 'deptAdmin';
   const gridClass =
     cards.length > 3
       ? 'grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
       : 'grid grid-cols-1 gap-6 sm:grid-cols-3';
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadCounts() {
+      setLoadError(null);
+      try {
+        const response = await fetchRtiQueryCount();
+        if (!cancelled) {
+          setCountData(response.data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setLoadError(err.message || 'Failed to load dashboard counts');
+        }
+      }
+    }
+
+    loadCounts();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function getCardValue(label) {
+    const countKey = COUNT_API_LABELS[label];
+    if (countKey && countData) {
+      return countData[countKey];
+    }
+    return '—';
+  }
 
   return (
     <div>
@@ -42,6 +84,12 @@ export default function Dashboard({ currentRole }) {
         )}
       </div>
 
+      {loadError && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {loadError}
+        </div>
+      )}
+
       <div className={gridClass}>
         {cards.map((label) => (
           <div
@@ -50,7 +98,7 @@ export default function Dashboard({ currentRole }) {
           >
             <p className="text-sm font-medium text-slate-500">{label}</p>
             <p className="mt-2 text-3xl font-semibold text-slate-900">
-              {values[label] ?? '—'}
+              {countData || !COUNT_API_LABELS[label] ? getCardValue(label) : '…'}
             </p>
           </div>
         ))}

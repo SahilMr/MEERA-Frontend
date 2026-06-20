@@ -21,7 +21,15 @@ function ProtectedRoute({ currentRole, allowedRole, children }) {
 }
 
 export default function App() {
-  const [currentRole, setCurrentRole] = useState(null);
+  const [currentRole, setCurrentRole] = useState(() => {
+    try {
+      const saved = localStorage.getItem('currentUser');
+      if (saved) {
+        return JSON.parse(saved).role;
+      }
+    } catch {}
+    return null;
+  });
   const navigate = useNavigate();
 
   function handleLogin(role) {
@@ -30,6 +38,8 @@ export default function App() {
   }
 
   function handleLogout() {
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('deptAdminContext');
     setCurrentRole(null);
     navigate('/login');
   }

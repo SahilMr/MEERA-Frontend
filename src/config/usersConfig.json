@@ -1,0 +1,59 @@
+{
+  "password": "P@ssword",
+  "users": [
+    {
+      "email": "Meera.Admin@rbi.org.in",
+      "role": "admin",
+      "department": null,
+      "office": "Central Office"
+    },
+    {
+      "email": "dos.admin@rbi.org.in",
+      "role": "deptAdmin",
+      "department": "Department Of Supervision",
+      "office": "Central Office"
+    },
+    {
+      "email": "dor.admin@rbi.org.in",
+      "role": "deptAdmin",
+      "department": "Department of Regulations",
+      "office": "Central Office"
+    },
+    {
+      "email": "Rohan.Mishra@rbi.org.in",
+      "role": "user",
+      "department": "Department Of Supervision",
+      "office": "Central Office"
+    },
+    {
+      "email": "Amit.Patel@rbi.org.in",
+      "role": "user",
+      "department": "Department Of Supervision",
+      "office": "Central Office"
+    },
+    {
+      "email": "Sarita.Mukherjee@rbi.org.in",
+      "role": "user",
+      "department": "Department Of Supervision",
+      "office": "Central Office"
+    },
+    {
+      "email": "Dainik.Bhaskar@rbi.org.in",
+      "role": "user",
+      "department": "Department of Regulations",
+      "office": "Central Office"
+    },
+    {
+      "email": "Atique.Syed@rbi.org.in",
+      "role": "user",
+      "department": "Department of Regulations",
+      "office": "Central Office"
+    },
+    {
+      "email": "Sahil.T@rbi.org.in",
+      "role": "user",
+      "department": "Department of Regulations",
+      "office": "Central Office"
+    }
+  ]
+}

@@ -1,15 +1,11 @@
 import { useState } from 'react';
-
-const ROLES = [
-  { value: 'admin', label: 'Admin' },
-  { value: 'deptAdmin', label: 'Department Admin' },
-  { value: 'user', label: 'Department User' },
-];
+import usersConfig from '../config/usersConfig.json';
+import { deptAdminContext } from '../mock/departmentMaster';
 
 export default function Login({ onLogin }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('user');
+  const [errorMessage, setErrorMessage] = useState('');
   const [showError, setShowError] = useState(false);
 
   const isValid = username.trim() !== '' && password.trim() !== '';
@@ -17,10 +13,36 @@ export default function Login({ onLogin }) {
   function handleSubmit(e) {
     e.preventDefault();
     if (!isValid) {
+      setErrorMessage('Please enter both username and password.');
       setShowError(true);
       return;
     }
-    onLogin(role);
+
+    // Find user in usersConfig
+    const user = usersConfig.users.find(
+      (u) => u.email.toLowerCase() === username.trim().toLowerCase()
+    );
+
+    if (!user || password !== usersConfig.password) {
+      setErrorMessage('Invalid username or password.');
+      setShowError(true);
+      return;
+    }
+
+    // Save to localStorage
+    localStorage.setItem('currentUser', JSON.stringify(user));
+
+    // Update deptAdminContext if user is department admin
+    if (user.role === 'deptAdmin') {
+      const newCtx = {
+        office: user.office || 'Central Office',
+        department: user.department,
+      };
+      localStorage.setItem('deptAdminContext', JSON.stringify(newCtx));
+      Object.assign(deptAdminContext, newCtx);
+    }
+
+    onLogin(user.role);
   }
 
   return (
@@ -41,7 +63,7 @@ export default function Login({ onLogin }) {
         >
           <div className="mb-5">
             <label htmlFor="username" className="mb-1.5 block text-sm font-medium text-slate-700">
-              Username
+              Username (Email)
             </label>
             <input
               id="username"
@@ -52,7 +74,7 @@ export default function Login({ onLogin }) {
                 setShowError(false);
               }}
               className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 transition placeholder:text-slate-400"
-              placeholder="Enter username"
+              placeholder="e.g. dos.admin@rbi.org.in"
             />
           </div>
 
@@ -68,34 +90,14 @@ export default function Login({ onLogin }) {
                 setPassword(e.target.value);
                 setShowError(false);
               }}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 transition placeholder:text-slate-400"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-[#1a1a1a] transition placeholder:text-slate-400"
               placeholder="Enter password"
             />
           </div>
 
-          <div className="mb-6">
-            <span className="mb-2 block text-sm font-medium text-slate-700">Role</span>
-            <div className="flex gap-2">
-              {ROLES.map((r) => (
-                <button
-                  key={r.value}
-                  type="button"
-                  onClick={() => setRole(r.value)}
-                  className={`flex-1 rounded-lg border px-3 py-2 text-xs font-medium transition ${
-                    role === r.value
-                      ? 'border-brand-600 bg-brand-600 text-white shadow-sm'
-                      : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50'
-                  }`}
-                >
-                  {r.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {showError && (
             <p className="mb-4 text-sm text-red-600">
-              Please enter both username and password.
+              {errorMessage}
             </p>
           )}
 

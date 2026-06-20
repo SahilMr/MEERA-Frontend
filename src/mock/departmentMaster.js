@@ -1,82 +1,77 @@
 export const deptAdminContext = {
-  office: 'Municipal Corporation HQ',
-  department: 'Public Works Department',
+  office: 'Central Office',
+  department: 'Department Of Supervision',
 };
 
-export const offices = ['Municipal Corporation HQ', 'Regional Office — North', 'Regional Office — South'];
+// Initialize from localStorage if it exists
+try {
+  const saved = localStorage.getItem('deptAdminContext');
+  if (saved) {
+    Object.assign(deptAdminContext, JSON.parse(saved));
+  }
+} catch {}
+
+export const offices = ['Central Office', 'Regional Office — North', 'Regional Office — South'];
 
 export const departmentsByOffice = {
-  'Municipal Corporation HQ': [
-    'Public Works Department',
-    'Health Department',
-    'Education Department',
+  'Central Office': [
+    'Department Of Supervision',
+    'Department of Regulations',
   ],
-  'Regional Office — North': ['Public Works Department', 'Revenue Department'],
-  'Regional Office — South': ['Public Works Department', 'Urban Planning Department'],
+  'Regional Office — North': ['Department Of Supervision'],
+  'Regional Office — South': ['Department of Regulations'],
 };
 
 export const divisionsByDepartment = {
-  'Public Works Department': ['Roads Division', 'Water Supply Division', 'Building Division'],
-  'Health Department': ['Primary Care Division', 'Sanitation Division'],
-  'Education Department': ['Schools Division', 'Scholarships Division'],
-  'Revenue Department': ['Assessment Division', 'Collection Division'],
-  'Urban Planning Department': ['Zoning Division', 'Permits Division'],
+  'Department Of Supervision': ['Supervision Division 1', 'Supervision Division 2'],
+  'Department of Regulations': ['Regulations Division 1', 'Regulations Division 2'],
 };
 
 export const subSectionsByDivision = {
-  'Roads Division': ['Ward Planning', 'Maintenance', 'Tender Management'],
-  'Water Supply Division': ['Pipeline Operations', 'Billing'],
-  'Building Division': ['Plan Approval', 'Inspection'],
-  'Primary Care Division': ['Clinic Operations', 'Immunization'],
-  'Sanitation Division': ['Waste Collection', 'Drainage'],
-  'Schools Division': ['Primary Schools', 'Secondary Schools'],
-  'Scholarships Division': ['Applications', 'Disbursement'],
-  'Assessment Division': ['Property Tax', 'Trade License'],
-  'Collection Division': ['Recovery', 'Reconciliation'],
-  'Zoning Division': ['Residential', 'Commercial'],
-  'Permits Division': ['Construction', 'Renovation'],
+  'Supervision Division 1': ['On-site Inspection', 'Off-site Monitoring'],
+  'Supervision Division 2': ['Risk Assessment', 'Compliance Audit'],
+  'Regulations Division 1': ['Policy Formulation', 'Drafting guidelines'],
+  'Regulations Division 2': ['Interpretation & Clarification', 'Legal advisory'],
 };
 
 export const departmentUsers = [
-  'Rajesh Kumar',
-  'Priya Sharma',
-  'Amit Patel',
-  'Meena Iyer',
-  'Suresh Reddy',
-  'Kavita Desai',
+  'Rohan.Mishra@rbi.org.in',
+  'Amit.Patel@rbi.org.in',
+  'Sarita.Mukherjee@rbi.org.in',
+  'Dainik.Bhaskar@rbi.org.in',
+  'Atique.Syed@rbi.org.in',
+  'Sahil.T@rbi.org.in',
 ];
 
 export const initialUserMappings = [
   {
     id: 'MAP-001',
-    office: 'Municipal Corporation HQ',
-    department: 'Public Works Department',
-    division: 'Roads Division',
-    subSection: 'Ward Planning',
-    departmentUser: 'Rajesh Kumar',
+    office: 'Central Office',
+    department: 'Department Of Supervision',
+    division: 'Supervision Division 1',
+    subSection: 'On-site Inspection',
+    departmentUser: 'Rohan.Mishra@rbi.org.in',
   },
   {
     id: 'MAP-002',
-    office: 'Municipal Corporation HQ',
-    department: 'Public Works Department',
-    division: 'Water Supply Division',
-    subSection: 'Pipeline Operations',
-    departmentUser: 'Priya Sharma',
+    office: 'Central Office',
+    department: 'Department of Regulations',
+    division: 'Regulations Division 1',
+    subSection: 'Policy Formulation',
+    departmentUser: 'Atique.Syed@rbi.org.in',
   },
 ];
 
 export const bulkUploadTemplateHeaders = [
   'Office',
-  'Department',
   'Division/Section',
   'Sub-Section',
   'Department User',
 ];
 
 export const bulkUploadTemplateExample = [
-  'Municipal Corporation HQ',
-  'Public Works Department',
-  'Roads Division',
-  'Maintenance',
-  'Amit Patel',
+  'Central Office',
+  'Supervision Division 1',
+  'On-site Inspection',
+  'Rohan.Mishra@rbi.org.in',
 ];

@@ -1,6 +1,6 @@
 export const rtiColumnConfig = [
-  { key: 'id', label: 'RTI Query ID' },
-  { key: 'sarthiInward', label: 'Sarthi Inward Number' },
+  { key: 'rti_query_id', label: 'RTI Query ID' },
+  { key: 'inward_id', label: 'Sarthi Inward Number' },
   { key: 'query', label: 'RTI Query' },
   { key: 'status', label: 'Status' },
 ];

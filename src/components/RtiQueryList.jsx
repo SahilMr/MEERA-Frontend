@@ -9,18 +9,50 @@
 // 8. Is the assistant panel interactive chat, or passive auto-suggestions only?
 // 9. Department onboarding/mapping screen — who manages it (Admin vs Dept Admin), and what gets mapped (users, RTI categories, both)?
 
-import { useState } from 'react';
-import { rtiColumnConfig, rtiQueries } from '../mock/rtiQueries';
+import { useEffect, useState } from 'react';
+import { rtiColumnConfig } from '../mock/rtiQueries';
+import { fetchRtiQuery } from '../services/rtiQueryApi';
 import StatusBadge from './StatusBadge';
 import RtiQuerySplitView from './RtiQuerySplitView';
 
 export default function RtiQueryList() {
-  const [selectedQuery, setSelectedQuery] = useState(null);
+  const [queries, setQueries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [selectedQueryId, setSelectedQueryId] = useState(null);
   const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadQueries() {
+      setLoading(true);
+      setLoadError(null);
+      try {
+        const response = await fetchRtiQuery({ limit: 100, offset: 0 });
+        if (!cancelled) {
+          setQueries(response.data ?? []);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setLoadError(err.message || 'Failed to load RTI queries');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadQueries();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function handleRowClick(query) {
     if (query.status === 'Pending') {
-      setSelectedQuery(query);
+      setSelectedQueryId(query.rti_query_id);
     } else {
       // TODO: undefined — what should happen on click for non-pending rows?
     }
@@ -28,7 +60,7 @@ export default function RtiQueryList() {
 
   function handleSubmit() {
     setToast('Office note submitted successfully.');
-    setSelectedQuery(null);
+    setSelectedQueryId(null);
     setTimeout(() => setToast(null), 3000);
   }
 
@@ -40,6 +72,12 @@ export default function RtiQueryList() {
           Review and respond to incoming requests
         </p>
       </div>
+
+      {loadError && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {loadError}
+        </div>
+      )}
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="w-full text-left text-sm">
@@ -56,35 +94,49 @@ export default function RtiQueryList() {
             </tr>
           </thead>
           <tbody>
-            {rtiQueries.map((row) => (
-              <tr
-                key={row.id}
-                onClick={() => handleRowClick(row)}
-                className={`border-b border-slate-100 transition last:border-0 ${
-                  row.status === 'Pending'
-                    ? 'cursor-pointer hover:bg-brand-50/50'
-                    : 'cursor-default'
-                }`}
-              >
-                {rtiColumnConfig.map((col) => (
-                  <td key={col.key} className="px-5 py-4 text-slate-800">
-                    {col.key === 'status' ? (
-                      <StatusBadge status={row.status} />
-                    ) : (
-                      row[col.key]
-                    )}
-                  </td>
-                ))}
+            {loading ? (
+              <tr>
+                <td colSpan={rtiColumnConfig.length} className="px-5 py-8 text-center text-slate-500">
+                  Loading queries…
+                </td>
               </tr>
-            ))}
+            ) : queries.length === 0 ? (
+              <tr>
+                <td colSpan={rtiColumnConfig.length} className="px-5 py-8 text-center text-slate-500">
+                  No queries found.
+                </td>
+              </tr>
+            ) : (
+              queries.map((row) => (
+                <tr
+                  key={row.rti_query_id}
+                  onClick={() => handleRowClick(row)}
+                  className={`border-b border-slate-100 transition last:border-0 ${
+                    row.status === 'Pending'
+                      ? 'cursor-pointer hover:bg-brand-50/50'
+                      : 'cursor-default'
+                  }`}
+                >
+                  {rtiColumnConfig.map((col) => (
+                    <td key={col.key} className="px-5 py-4 text-slate-800">
+                      {col.key === 'status' ? (
+                        <StatusBadge status={row.status} />
+                      ) : (
+                        row[col.key]
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
-      {selectedQuery && (
+      {selectedQueryId && (
         <RtiQuerySplitView
-          query={selectedQuery}
-          onClose={() => setSelectedQuery(null)}
+          rtiQueryId={selectedQueryId}
+          onClose={() => setSelectedQueryId(null)}
           onSubmit={handleSubmit}
         />
       )}
