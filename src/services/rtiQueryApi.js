@@ -102,6 +102,20 @@ export function fetchRtiQueryDetail(rtiQueryId) {
 }
 
 /**
+ * GET fetch_atomic_queries
+ * @param {string} rtiQueryId
+ * @param {number} departmentMappingId
+ * @returns {Promise<any>}
+ */
+export function fetchAtomicQueries(rtiQueryId, departmentMappingId) {
+  const query = buildQueryString({
+    rti_query_id: rtiQueryId,
+    department_mapping_id: departmentMappingId,
+  });
+  return apiGet(`${apiEndpoints.rtiQuery.atomicQuery}${query}`);
+}
+
+/**
  * GET get_session
  * @param {Object} params
  * @param {string} params.rti_query_id

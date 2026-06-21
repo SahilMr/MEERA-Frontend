@@ -14,6 +14,8 @@ export const apiEndpoints = {
     fetchCount: '/api/v1/rti-queries/count',
     /** GET fetch_rti_query_detail — append /{rti_query_id} */
     fetchDetail: '/api/v1/rti-queries',
+    /** GET atomic queries related to an RTI query */
+    atomicQuery: '/api/v1/rti-queries/atomic-query',
   },
 
   assistant: {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { fetchRtiQueryDetail } from '../services/rtiQueryApi';
+import { fetchAtomicQueries } from '../services/rtiQueryApi';
 import AssistantPanel from './AssistantPanel';
+import TiptapEditor from './TiptapEditor';
 
 function ReadOnlyField({ label, value }) {
   return (
@@ -12,9 +13,9 @@ function ReadOnlyField({ label, value }) {
 }
 
 export default function RtiQuerySplitView({ rtiQueryId, onClose, onSubmit }) {
-  const [detail, setDetail] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(null);
+  const [atomicQueries, setAtomicQueries] = useState([]);
+  const [atomicLoading, setAtomicLoading] = useState(true);
+  const [atomicError, setAtomicError] = useState(null);
   const [officeNote, setOfficeNote] = useState('');
   const [officeNoteFile, setOfficeNoteFile] = useState(null);
   const [attachedDocs, setAttachedDocs] = useState(null);
@@ -24,26 +25,29 @@ export default function RtiQuerySplitView({ rtiQueryId, onClose, onSubmit }) {
   useEffect(() => {
     let cancelled = false;
 
-    async function loadDetail() {
-      setLoading(true);
-      setLoadError(null);
+    async function loadData() {
+      setAtomicLoading(true);
+      setAtomicError(null);
       try {
-        const response = await fetchRtiQueryDetail(rtiQueryId);
+        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        const deptMappingId = user?.department_mapping_id || 1;
+        
+        const atomicResponse = await fetchAtomicQueries(rtiQueryId, deptMappingId);
         if (!cancelled) {
-          setDetail(response.data);
+          setAtomicQueries(atomicResponse.data || []);
         }
       } catch (err) {
         if (!cancelled) {
-          setLoadError(err.message || 'Failed to load query details');
+          setAtomicError(err.message || 'Failed to load atomic queries');
         }
       } finally {
         if (!cancelled) {
-          setLoading(false);
+          setAtomicLoading(false);
         }
       }
     }
 
-    loadDetail();
+    loadData();
     return () => {
       cancelled = true;
     };
@@ -64,9 +68,6 @@ export default function RtiQuerySplitView({ rtiQueryId, onClose, onSubmit }) {
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-slate-900">{rtiQueryId}</h2>
-            {detail?.inward_id && (
-              <p className="mt-1 text-sm text-slate-500">{detail.inward_id}</p>
-            )}
           </div>
           <button
             type="button"
@@ -77,57 +78,34 @@ export default function RtiQuerySplitView({ rtiQueryId, onClose, onSubmit }) {
           </button>
         </div>
 
-        {loading && (
-          <p className="text-sm text-slate-500">Loading query details…</p>
+        {atomicLoading && (
+          <p className="text-sm text-slate-500">Loading subqueries…</p>
         )}
 
-        {loadError && (
+        {atomicError && (
           <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {loadError}
+            {atomicError}
           </div>
         )}
 
-        {detail && (
+        {!atomicLoading && !atomicError && (
           <>
-            <div className="mb-8 rounded-xl border border-slate-200 bg-slate-50 p-6">
-              <ReadOnlyField label="Query" value={detail.query_text} />
-              <ReadOnlyField label="Status" value={detail.status} />
-              {detail.assigned_to && (
-                <ReadOnlyField label="Assigned To" value={detail.assigned_to} />
-              )}
-              {detail.assigned_at && (
-                <ReadOnlyField label="Assigned At" value={detail.assigned_at} />
-              )}
-              {detail.supporting_documents?.length > 0 && (
-                <div className="mb-4">
-                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                    Supporting Documents
-                  </p>
-                  <ul className="list-inside list-disc text-sm text-slate-800">
-                    {detail.supporting_documents.map((doc) => (
-                      <li key={doc}>{doc}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            {detail.office_notes?.length > 0 && (
+            {atomicQueries.length > 0 ? (
               <div className="mb-8">
-                <p className="mb-3 text-sm font-medium text-slate-700">Office Notes</p>
-                <div className="space-y-3">
-                  {detail.office_notes.map((note) => (
-                    <div
-                      key={note.office_note_id}
-                      className="rounded-lg border border-slate-200 bg-white p-4"
-                    >
-                      <p className="text-sm text-slate-800">{note.office_note}</p>
-                      <p className="mt-2 text-xs text-slate-400">
-                        {note.created_by} · {note.created_at}
-                      </p>
+                <p className="mb-3 text-sm font-medium text-slate-700">Assigned Subqueries (Atomic Queries)</p>
+                <div className="space-y-4">
+                  {atomicQueries.map((aq, idx) => (
+                    <div key={aq.atomic_query_id || aq.id || idx} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                      <ReadOnlyField label="Subquery" value={aq.query_text || aq.query || aq.atomic_query} />
+                      {aq.status && <ReadOnlyField label="Status" value={aq.status} />}
+                      {aq.assigned_to && <ReadOnlyField label="Assigned To" value={aq.assigned_to} />}
                     </div>
                   ))}
                 </div>
+              </div>
+            ) : (
+              <div className="mb-8 rounded-xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
+                No atomic queries found for this department user.
               </div>
             )}
 
@@ -135,12 +113,9 @@ export default function RtiQuerySplitView({ rtiQueryId, onClose, onSubmit }) {
               <label htmlFor="office-note" className="mb-1.5 block text-sm font-medium text-slate-700">
                 Office Note
               </label>
-              <textarea
-                id="office-note"
+              <TiptapEditor
                 value={officeNote}
-                onChange={(e) => setOfficeNote(e.target.value)}
-                rows={8}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 transition placeholder:text-slate-400"
+                onChange={setOfficeNote}
                 placeholder="Draft your office note here..."
               />
             </div>
