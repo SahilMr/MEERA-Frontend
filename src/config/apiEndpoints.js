@@ -9,11 +9,11 @@ export const apiEndpoints = {
 
   rtiQuery: {
     /** GET fetch_rti_query — list / filter / single-record by query param */
-    fetchList: '/api/v1/rti-query',
+    fetchList: '/api/v1/rti-queries',
     /** GET fetch_rti_query_count — aggregate counts */
-    fetchCount: '/api/v1/rti-query/count',
+    fetchCount: '/api/v1/rti-queries/count',
     /** GET fetch_rti_query_detail — append /{rti_query_id} */
-    fetchDetail: '/api/v1/rti-query',
+    fetchDetail: '/api/v1/rti-queries',
   },
 
   assistant: {
