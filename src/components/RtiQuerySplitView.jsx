@@ -13,6 +13,9 @@ function ReadOnlyField({ label, value }) {
 }
 
 export default function RtiQuerySplitView({ rtiQueryId, onClose, onSubmit }) {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+  const isViewOnly = currentUser.role === 'admin' || currentUser.role === 'deptAdmin';
+
   const [atomicQueries, setAtomicQueries] = useState([]);
   const [atomicLoading, setAtomicLoading] = useState(true);
   const [atomicError, setAtomicError] = useState(null);
@@ -29,12 +32,19 @@ export default function RtiQuerySplitView({ rtiQueryId, onClose, onSubmit }) {
       setAtomicLoading(true);
       setAtomicError(null);
       try {
-        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-        const deptMappingId = user?.department_mapping_id || 1;
-        
-        const atomicResponse = await fetchAtomicQueries(rtiQueryId, deptMappingId);
+        const atomicResponse = await fetchAtomicQueries(rtiQueryId);
         if (!cancelled) {
-          setAtomicQueries(atomicResponse.data || []);
+          const allAtomics = atomicResponse.data || [];
+          if (currentUser.role === 'admin') {
+            setAtomicQueries(allAtomics);
+          } else if (currentUser.department) {
+            const filteredAtomics = allAtomics.filter(
+              (aq) => aq.department_name === currentUser.department
+            );
+            setAtomicQueries(filteredAtomics);
+          } else {
+            setAtomicQueries(allAtomics);
+          }
         }
       } catch (err) {
         if (!cancelled) {
@@ -58,8 +68,61 @@ export default function RtiQuerySplitView({ rtiQueryId, onClose, onSubmit }) {
   }
 
   function handleSubmit() {
-    // TODO: confirm whether submit auto-resolves the query or needs a review step
     onSubmit();
+  }
+
+  if (isViewOnly) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-6">
+        <div className="flex w-full max-w-3xl flex-col rounded-2xl bg-white p-8 shadow-xl max-h-[85vh] overflow-y-auto">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-900">{rtiQueryId}</h2>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 transition hover:bg-slate-50"
+            >
+              Close
+            </button>
+          </div>
+
+          {atomicLoading && (
+            <p className="text-sm text-slate-500">Loading subqueries…</p>
+          )}
+
+          {atomicError && (
+            <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {atomicError}
+            </div>
+          )}
+
+          {!atomicLoading && !atomicError && (
+            <>
+              {atomicQueries.length > 0 ? (
+                <div className="mb-2">
+                  <p className="mb-3 text-sm font-medium text-slate-700">Assigned Subqueries (Atomic Queries)</p>
+                  <div className="space-y-4">
+                    {atomicQueries.map((aq, idx) => (
+                      <div key={aq.atomic_query_id || aq.id || idx} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <ReadOnlyField label="Subquery" value={aq.query_text || aq.query || aq.atomic_query} />
+                        {aq.status && <ReadOnlyField label="Status" value={aq.status} />}
+                        {aq.assigned_to && <ReadOnlyField label="Assigned To" value={aq.assigned_to} />}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-2 rounded-xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
+                  No atomic queries found for this department.
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
   }
 
   return (

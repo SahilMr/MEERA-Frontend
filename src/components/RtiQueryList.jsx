@@ -11,7 +11,7 @@
 
 import { useEffect, useState } from 'react';
 import { rtiColumnConfig } from '../mock/rtiQueries';
-import { fetchRtiQuery } from '../services/rtiQueryApi';
+import { fetchRtiQuery, fetchAtomicQueries } from '../services/rtiQueryApi';
 import StatusBadge from './StatusBadge';
 import RtiQuerySplitView from './RtiQuerySplitView';
 
@@ -29,9 +29,43 @@ export default function RtiQueryList() {
       setLoading(true);
       setLoadError(null);
       try {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
         const response = await fetchRtiQuery({ limit: 100, offset: 0 });
         if (!cancelled) {
-          setQueries(response.data ?? []);
+          const allQueries = response.data ?? [];
+          
+          const populatedQueries = await Promise.all(
+            allQueries.map(async (query) => {
+              try {
+                const atomicRes = await fetchAtomicQueries(query.rti_query_id);
+                const atomics = atomicRes.data || [];
+                const firstWithInward = atomics.find((aq) => aq.inward_id);
+                return {
+                  ...query,
+                  inward_id: firstWithInward ? firstWithInward.inward_id : 'N/A',
+                  atomics,
+                };
+              } catch (e) {
+                console.error('Error fetching atomic queries for', query.rti_query_id, e);
+                return {
+                  ...query,
+                  inward_id: 'N/A',
+                  atomics: [],
+                };
+              }
+            })
+          );
+
+          if (currentUser.role === 'deptAdmin' && currentUser.department) {
+            const filtered = populatedQueries.filter((query) =>
+              query.atomics.some((aq) => aq.department_name === currentUser.department)
+            );
+            filtered.sort((a, b) => a.rti_query_id.localeCompare(b.rti_query_id));
+            setQueries(filtered);
+          } else {
+            populatedQueries.sort((a, b) => a.rti_query_id.localeCompare(b.rti_query_id));
+            setQueries(populatedQueries);
+          }
         }
       } catch (err) {
         if (!cancelled) {
@@ -51,11 +85,7 @@ export default function RtiQueryList() {
   }, []);
 
   function handleRowClick(query) {
-    if (query.status === 'Pending') {
-      setSelectedQueryId(query.rti_query_id);
-    } else {
-      // TODO: undefined — what should happen on click for non-pending rows?
-    }
+    setSelectedQueryId(query.rti_query_id);
   }
 
   function handleSubmit() {
@@ -111,11 +141,7 @@ export default function RtiQueryList() {
                 <tr
                   key={row.rti_query_id}
                   onClick={() => handleRowClick(row)}
-                  className={`border-b border-slate-100 transition last:border-0 ${
-                    row.status === 'Pending'
-                      ? 'cursor-pointer hover:bg-brand-50/50'
-                      : 'cursor-default'
-                  }`}
+                  className="border-b border-slate-100 transition last:border-0 cursor-pointer hover:bg-brand-50/50"
                 >
                   {rtiColumnConfig.map((col) => (
                     <td key={col.key} className="px-5 py-4 text-slate-800">

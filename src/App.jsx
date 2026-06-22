@@ -14,8 +14,11 @@ const ROLE_ROUTES = {
 
 function ProtectedRoute({ currentRole, allowedRole, children }) {
   if (!currentRole) return <Navigate to="/login" replace />;
-  if (allowedRole && currentRole !== allowedRole) {
-    return <Navigate to={ROLE_ROUTES[currentRole]} replace />;
+  if (allowedRole) {
+    const roles = Array.isArray(allowedRole) ? allowedRole : [allowedRole];
+    if (!roles.includes(currentRole)) {
+      return <Navigate to={ROLE_ROUTES[currentRole]} replace />;
+    }
   }
   return children;
 }
@@ -104,7 +107,7 @@ export default function App() {
       <Route
         path="/rti-queries"
         element={
-          <ProtectedRoute currentRole={currentRole} allowedRole="user">
+          <ProtectedRoute currentRole={currentRole} allowedRole={['user', 'admin', 'deptAdmin']}>
             <AppLayout currentRole={currentRole} onLogout={handleLogout}>
               <RtiQueryList />
             </AppLayout>

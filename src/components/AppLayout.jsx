@@ -12,11 +12,15 @@ export default function AppLayout({ currentRole, onLogout, children }) {
 
   const navItems =
     currentRole === 'admin'
-      ? [{ to: '/admin', label: 'Dashboard' }]
+      ? [
+          { to: '/admin', label: 'Dashboard' },
+          { to: '/rti-queries', label: 'RTI Queries' },
+        ]
       : currentRole === 'deptAdmin'
         ? [
             { to: '/dept-admin', label: 'Dashboard' },
             { to: '/dept-admin/masters', label: 'Masters' },
+            { to: '/rti-queries', label: 'RTI Queries' },
           ]
         : currentRole === 'user'
           ? [
