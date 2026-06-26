@@ -16,6 +16,10 @@ export const apiEndpoints = {
     fetchDetail: '/api/v1/rti-queries',
     /** GET atomic queries related to an RTI query */
     atomicQuery: '/api/v1/rti-queries/atomic-query',
+    /** PUT mark atomic query off */
+    markAtomicQuery: '/api/v1/rti-queries/atomic/mark',
+    /** PUT update atomic query */
+    updateAtomicQuery: '/api/v1/rti-queries/atomic',
   },
 
   assistant: {

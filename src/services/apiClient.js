@@ -83,6 +83,81 @@ export async function apiPost(path, body, options = {}) {
 }
 
 /**
+ * @template T
+ * @param {string} path - Path relative to baseUrl.
+ * @param {any} body - JSON request body.
+ * @param {RequestInit} [options]
+ * @returns {Promise<T>}
+ */
+export async function apiPut(path, body, options = {}) {
+  const url = buildApiUrl(path);
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      ...options.headers,
+    },
+    body: JSON.stringify(body),
+    ...options,
+  });
+
+  let responseBody;
+  try {
+    responseBody = await response.json();
+  } catch {
+    throw new ApiError(response.status, {
+      error: 'INVALID_JSON_RESPONSE',
+      message: 'Server returned a non-JSON response',
+      data: null,
+    });
+  }
+
+  if (!response.ok) {
+    throw new ApiError(response.status, responseBody);
+  }
+
+  return responseBody;
+}
+
+/**
+ * @template T
+ * @param {string} path - Path relative to baseUrl.
+ * @param {FormData} formData - FormData object.
+ * @param {RequestInit} [options]
+ * @returns {Promise<T>}
+ */
+export async function apiPutForm(path, formData, options = {}) {
+  const url = buildApiUrl(path);
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      Accept: 'application/json',
+      ...options.headers,
+    },
+    body: formData,
+    ...options,
+  });
+
+  let responseBody;
+  try {
+    responseBody = await response.json();
+  } catch {
+    throw new ApiError(response.status, {
+      error: 'INVALID_JSON_RESPONSE',
+      message: 'Server returned a non-JSON response',
+      data: null,
+    });
+  }
+
+  if (!response.ok) {
+    throw new ApiError(response.status, responseBody);
+  }
+
+  return responseBody;
+}
+
+/**
  * @param {Record<string, string | number | boolean | undefined | null>} params
  * @returns {string}
  */

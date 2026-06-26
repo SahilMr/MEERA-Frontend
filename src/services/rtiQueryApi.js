@@ -1,5 +1,5 @@
 import { apiEndpoints } from '../config/apiEndpoints';
-import { apiGet, apiPost, buildQueryString } from './apiClient';
+import { apiGet, apiPost, apiPut, apiPutForm, buildQueryString } from './apiClient';
 
 /**
  * @typedef {Object} RtiQueryListItem
@@ -113,6 +113,26 @@ export function fetchAtomicQueries(rtiQueryId, departmentMappingId) {
     department_mapping_id: departmentMappingId,
   });
   return apiGet(`${apiEndpoints.rtiQuery.atomicQuery}${query}`);
+}
+
+/**
+ * PUT mark_atomic_query
+ * @param {string} atomicQueryId
+ * @returns {Promise<any>}
+ */
+export function markAtomicQuery(atomicQueryId) {
+  return apiPut(apiEndpoints.rtiQuery.markAtomicQuery, {
+    atomic_query_id: atomicQueryId,
+  });
+}
+
+/**
+ * PUT update_atomic_query
+ * @param {FormData} formData
+ * @returns {Promise<any>}
+ */
+export function updateAtomicQuery(formData) {
+  return apiPutForm(apiEndpoints.rtiQuery.updateAtomicQuery, formData);
 }
 
 /**

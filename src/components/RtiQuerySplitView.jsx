@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { fetchAtomicQueries } from '../services/rtiQueryApi';
+import { fetchAtomicQueries, markAtomicQuery, updateAtomicQuery } from '../services/rtiQueryApi';
 import AssistantPanel from './AssistantPanel';
 import TiptapEditor from './TiptapEditor';
 
@@ -19,6 +19,8 @@ export default function RtiQuerySplitView({ rtiQueryId, onClose, onSubmit }) {
   const [atomicQueries, setAtomicQueries] = useState([]);
   const [atomicLoading, setAtomicLoading] = useState(true);
   const [atomicError, setAtomicError] = useState(null);
+  const [isMarkingOff, setIsMarkingOff] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [officeNote, setOfficeNote] = useState('');
   const [officeNoteFile, setOfficeNoteFile] = useState(null);
   const [attachedDocs, setAttachedDocs] = useState(null);
@@ -67,8 +69,64 @@ export default function RtiQuerySplitView({ rtiQueryId, onClose, onSubmit }) {
     setOfficeNote(text);
   }
 
-  function handleSubmit() {
-    onSubmit();
+  async function handleMarkOff() {
+    setIsMarkingOff(true);
+    try {
+      for (const aq of atomicQueries) {
+        const id = aq.atomic_query_id || aq.id;
+        if (id) {
+          await markAtomicQuery(id);
+        }
+      }
+      onSubmit();
+    } catch (err) {
+      console.error('Failed to mark off', err);
+      alert('Failed to mark off');
+    } finally {
+      setIsMarkingOff(false);
+    }
+  }
+
+  async function handleSubmit() {
+    if (atomicQueries.length === 0) {
+      alert('No atomic queries found to submit notes for.');
+      return;
+    }
+
+    let fileToUpload = null;
+    let fileName = 'office_note.html';
+
+    if (officeNoteFile) {
+      fileToUpload = officeNoteFile;
+      fileName = officeNoteFile.name;
+    } else if (officeNote && officeNote.trim() !== '' && officeNote.trim() !== '<p></p>') {
+      fileToUpload = new Blob([officeNote], { type: 'text/html' });
+    }
+
+    if (!fileToUpload) {
+      alert('Please draft an office note or upload a file before submitting.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      for (const aq of atomicQueries) {
+        const id = aq.atomic_query_id || aq.id;
+        if (id) {
+          const formData = new FormData();
+          formData.append('atomic_query_id', id);
+          formData.append('atomic_query_office_note', fileToUpload, fileName);
+          formData.append('updated_by', currentUser.email || 'System');
+          await updateAtomicQuery(formData);
+        }
+      }
+      onSubmit();
+    } catch (err) {
+      console.error('Failed to submit office note', err);
+      alert('Failed to submit office note: ' + (err.message || err));
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   if (isViewOnly) {
@@ -189,7 +247,7 @@ export default function RtiQuerySplitView({ rtiQueryId, onClose, onSubmit }) {
                   ref={officeNoteInputRef}
                   type="file"
                   className="hidden"
-                  onChange={(e) => setOfficeNoteFile(e.target.files?.[0]?.name || null)}
+                  onChange={(e) => setOfficeNoteFile(e.target.files?.[0] || null)}
                 />
                 <button
                   type="button"
@@ -199,7 +257,7 @@ export default function RtiQuerySplitView({ rtiQueryId, onClose, onSubmit }) {
                   Upload Office Note
                 </button>
                 {officeNoteFile && (
-                  <p className="mt-1 text-xs text-slate-500">{officeNoteFile}</p>
+                  <p className="mt-1 text-xs text-slate-500">{officeNoteFile.name}</p>
                 )}
               </div>
 
@@ -208,7 +266,7 @@ export default function RtiQuerySplitView({ rtiQueryId, onClose, onSubmit }) {
                   ref={attachDocsInputRef}
                   type="file"
                   className="hidden"
-                  onChange={(e) => setAttachedDocs(e.target.files?.[0]?.name || null)}
+                  onChange={(e) => setAttachedDocs(e.target.files?.[0] || null)}
                 />
                 <button
                   type="button"
@@ -218,18 +276,29 @@ export default function RtiQuerySplitView({ rtiQueryId, onClose, onSubmit }) {
                   Attach Documents
                 </button>
                 {attachedDocs && (
-                  <p className="mt-1 text-xs text-slate-500">{attachedDocs}</p>
+                  <p className="mt-1 text-xs text-slate-500">{attachedDocs.name}</p>
                 )}
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={handleSubmit}
-              className="w-fit rounded-lg bg-brand-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-brand-700"
-            >
-              Submit
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSubmitting || atomicQueries.length === 0}
+                className="w-fit rounded-lg bg-brand-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-50"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit'}
+              </button>
+              <button
+                type="button"
+                onClick={handleMarkOff}
+                disabled={isMarkingOff || isSubmitting || atomicQueries.length === 0}
+                className="w-fit rounded-lg border border-brand-600 px-6 py-2.5 text-sm font-medium text-brand-600 shadow-sm transition hover:bg-brand-50 disabled:opacity-50"
+              >
+                {isMarkingOff ? 'Marking Off...' : 'Mark Off'}
+              </button>
+            </div>
           </>
         )}
       </div>
